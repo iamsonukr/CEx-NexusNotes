@@ -57,16 +57,23 @@ app.use(helmet({
 const allowed = (process.env.ALLOWED_ORIGINS || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
+// app.use(cors({
+//   origin: (origin, cb) => {
+//     // Allow no-origin (curl/Postman in dev) and chrome-extension:// origins
+//     if (!origin || process.env.NODE_ENV !== 'production') return cb(null, true);
+//     const ok = allowed.some(o => origin.startsWith(o));
+//     ok ? cb(null, true) : cb(new Error(`CORS blocked: ${origin}`));
+//   },
+//   methods:        ['GET', 'PUT', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   maxAge:         86400,
+// }));
+
 app.use(cors({
-  origin: (origin, cb) => {
-    // Allow no-origin (curl/Postman in dev) and chrome-extension:// origins
-    if (!origin || process.env.NODE_ENV !== 'production') return cb(null, true);
-    const ok = allowed.some(o => origin.startsWith(o));
-    ok ? cb(null, true) : cb(new Error(`CORS blocked: ${origin}`));
-  },
-  methods:        ['GET', 'PUT', 'OPTIONS'],
+  origin: true, // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge:         86400,
+  credentials: true
 }));
 
 // ── Body parsing ───────────────────────────────────────────────────
