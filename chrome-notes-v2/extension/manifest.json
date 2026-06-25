@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "TabNotes",
+  "version": "1.2.0",
+  "description": "Tabbed notes with a free local plan and cloud sync after activation.",
+  "icons": {
+    "32": "icons/browser.png",
+    "48": "icons/browser.png",
+    "128": "icons/browser.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "32": "icons/browser.png",
+      "48": "icons/browser.png",
+      "128": "icons/browser.png"
+    },
+    "default_title": "TabNotes"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "windows",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://nexusbackend-ookk.onrender.com/*",
+    "https://your-tabnotes-api.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

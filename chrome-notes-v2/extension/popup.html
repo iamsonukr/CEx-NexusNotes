@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TabNotes</title>
+<style>
+:root {
+  --bg:#0f0f0f; --surface:#1a1a1a; --surface2:#242424; --surface3:#2e2e2e;
+  --border:#2e2e2e; --accent:#d4a843; --accent2:#c49235;
+  --text:#f0ede8; --text2:#b8b3ad; --muted:#6b6560;
+  --danger:#e05c5c; --success:#5cc987; --warn:#e8a040;
+  --radius:6px;
+  --font-ui:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --font-mono:'Cascadia Code','Fira Code','Courier New',monospace;
+  --font-serif:Georgia,'Times New Roman',serif;
+  --popup-w:420px; --popup-h:560px; --font-base:13px; --ta-font:13px;
+}
+[data-theme="light"] {
+  --bg:#faf9f7; --surface:#f0ede8; --surface2:#e8e4de; --surface3:#ddd8d0;
+  --border:#d4cfc8; --accent:#b8873a; --accent2:#9a6e2a;
+  --text:#1a1714; --text2:#4a4540; --muted:#8a8078;
+  --danger:#c94040; --success:#2a8f50; --warn:#b07020;
+}
+[data-size="small"]  { --popup-w:340px; --popup-h:460px; --font-base:12px; --ta-font:12px; }
+[data-size="medium"] { --popup-w:420px; --popup-h:560px; --font-base:13px; --ta-font:13px; }
+[data-size="large"]  { --popup-w:560px; --popup-h:680px; --font-base:14px; --ta-font:14px; }
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{width:var(--popup-w);height:var(--popup-h);min-height:var(--popup-h);max-height:var(--popup-h);
+  background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:var(--font-base);
+  overflow:hidden;display:flex;flex-direction:column;transition:width .2s,height .2s;}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 13px 8px;border-bottom:1px solid var(--border);
+  background:var(--surface);flex-shrink:0;gap:6px;}
+.logo{font-family:var(--font-serif);font-size:18px;color:var(--accent);
+  letter-spacing:-.4px;font-style:italic;user-select:none;flex-shrink:0;}
+.logo-plain{color:var(--text);font-style:normal;}
+.header-right{display:flex;align-items:center;gap:4px;flex-shrink:0;position:relative;}
+.hbtn{background:none;border:1px solid var(--border);color:var(--muted);
+  width:27px;height:27px;border-radius:var(--radius);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  transition:border-color .15s,color .15s;}
+.hbtn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* License badge */
+.lic-badge{font-size:10px;font-family:var(--font-mono);padding:3px 8px;
+  border-radius:20px;display:flex;align-items:center;gap:4px;}
+.lic-badge.active{background:rgba(92,201,135,.1);border:1px solid rgba(92,201,135,.3);color:var(--success);}
+.lic-badge.grace{background:rgba(232,160,64,.1);border:1px solid rgba(232,160,64,.3);color:var(--warn);}
+.lic-badge.free,.lic-badge.none{background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);
+  color:var(--accent);cursor:pointer;transition:all .15s;}
+.lic-badge.free:hover,.lic-badge.none:hover{background:rgba(212,168,67,.18);}
+.lic-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.lic-badge.active .lic-dot{background:var(--success);}
+.lic-badge.grace  .lic-dot{background:var(--warn);animation:blink .8s infinite;}
+.lic-badge.none   .lic-dot{background:var(--accent);}
+.lic-badge.free   .lic-dot{background:var(--accent);}
+
+/* Settings panel */
+.settings-panel{display:none;position:absolute;top:32px;right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px;z-index:300;width:220px;box-shadow:0 8px 24px rgba(0,0,0,.35);}
+.settings-panel.open{display:block;}
+.s-title{font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted);font-family:var(--font-mono);margin-bottom:10px;}
+.s-group{margin-bottom:12px;}.s-group:last-child{margin-bottom:0;}
+.s-label{font-size:11px;color:var(--text2);margin-bottom:6px;display:block;}
+.s-divider{height:1px;background:var(--border);margin:10px 0;}
+.theme-row,.size-row{display:flex;gap:5px;}
+.theme-btn,.size-btn{flex:1;padding:6px 4px;border-radius:5px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);font-family:var(--font-mono);
+  font-size:11px;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:3px;}
+.theme-btn:hover,.size-btn:hover{border-color:var(--accent);color:var(--text);}
+.theme-btn.active,.size-btn.active{border-color:var(--accent);background:rgba(212,168,67,.12);color:var(--accent);}
+.size-btn{flex-direction:column;gap:2px;font-size:10px;}
+
+/* Auto-save toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;}
+.toggle{position:relative;width:34px;height:18px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface3);border-radius:18px;
+  cursor:pointer;transition:background .2s;}
+.toggle-slider::before{content:'';position:absolute;width:12px;height:12px;
+  left:3px;top:3px;background:var(--muted);border-radius:50%;transition:all .2s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);background:#0f0f0f;}
+.toggle input:disabled + .toggle-slider{opacity:.45;cursor:not-allowed;}
+[data-theme="light"] .toggle input:checked + .toggle-slider::before{background:#1a1714;}
+
+/* License section in settings */
+.s-lic-key{font-size:10px;font-family:var(--font-mono);color:var(--muted);
+  background:var(--bg);border:1px solid var(--border);border-radius:4px;
+  padding:4px 7px;margin-top:5px;word-break:break-all;line-height:1.5;}
+.s-lic-name{font-size:11px;color:var(--text2);font-family:var(--font-mono);margin-top:3px;}
+.s-lic-remove{width:100%;margin-top:7px;padding:5px;border-radius:var(--radius);
+  background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.25);
+  color:var(--danger);font-family:var(--font-mono);font-size:11px;
+  cursor:pointer;transition:all .15s;}
+.s-lic-remove:hover{background:rgba(224,92,92,.18);}
+.s-lic-activate{width:100%;margin-top:7px;padding:5px;border-radius:var(--radius);
+  background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);
+  color:var(--accent);font-family:var(--font-mono);font-size:11px;
+  cursor:pointer;transition:all .15s;}
+.s-lic-activate:hover{background:rgba(212,168,67,.18);}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;align-items:flex-end;background:var(--surface);
+  border-bottom:1px solid var(--border);overflow-x:auto;
+  scrollbar-width:none;padding:5px 8px 0;gap:2px;flex-shrink:0;min-height:36px;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{display:flex;align-items:center;gap:4px;padding:5px 7px 5px 10px;
+  border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;white-space:nowrap;
+  font-size:11px;font-family:var(--font-mono);color:var(--muted);
+  background:transparent;border:1px solid transparent;border-bottom:none;
+  transition:color .12s,background .12s;position:relative;top:1px;
+  max-width:130px;min-width:50px;user-select:none;}
+.tab:hover{color:var(--text);background:var(--surface2);}
+.tab.active{color:var(--accent);background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg);}
+.tab-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.tab-rename-input{flex:1;min-width:0;width:70px;background:transparent;
+  border:none;border-bottom:1px solid var(--accent);outline:none;
+  color:var(--accent);font-family:var(--font-mono);font-size:11px;padding:0 0 1px;}
+.tab-actions{display:flex;align-items:center;gap:1px;opacity:0;transition:opacity .1s;}
+.tab:hover .tab-actions,.tab.active .tab-actions{opacity:1;}
+.tab-act{background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:12px;line-height:1;padding:1px 3px;border-radius:3px;transition:color .1s,background .1s;}
+.tab-act:hover{background:var(--surface3);}
+.tab-act.hide-btn:hover{color:var(--warn);}
+.tab-act.del-btn:hover{color:var(--danger);}
+.btn-add-tab{background:none;border:1px dashed var(--border);color:var(--muted);
+  width:25px;height:25px;border-radius:var(--radius);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  transition:border-color .15s,color .15s;flex-shrink:0;margin-bottom:2px;margin-left:2px;}
+.btn-add-tab:hover{border-color:var(--accent);color:var(--accent);}
+.btn-add-tab:disabled{opacity:.35;cursor:not-allowed;border-style:solid;}
+
+/* ── HIDDEN TRAY ── */
+.hidden-tray{display:none;background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:5px 10px;flex-shrink:0;flex-wrap:wrap;gap:5px;align-items:center;}
+.hidden-tray.has-items{display:flex;}
+.tray-label{font-size:9px;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--muted);font-family:var(--font-mono);margin-right:4px;flex-shrink:0;}
+.tray-pill{display:flex;align-items:center;gap:4px;background:var(--surface3);
+  border:1px solid var(--border);border-radius:20px;padding:2px 8px 2px 6px;
+  cursor:pointer;font-size:10px;font-family:var(--font-mono);color:var(--text2);
+  transition:border-color .12s,color .12s;}
+.tray-pill:hover{border-color:var(--accent);color:var(--text);}
+.tray-pill-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.6;}
+.tray-pill-del{background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:11px;padding:0 0 0 2px;line-height:1;transition:color .1s;}
+.tray-pill-del:hover{color:var(--danger);}
+
+/* ── CONTEXT MENU ── */
+.ctx-menu{display:none;position:fixed;z-index:500;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;padding:5px 0;min-width:150px;
+  box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.ctx-menu.open{display:block;}
+.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 13px;
+  font-size:12px;font-family:var(--font-mono);color:var(--text2);
+  cursor:pointer;transition:background .1s,color .1s;}
+.ctx-item:hover{background:var(--surface2);color:var(--text);}
+.ctx-item.danger{color:var(--danger);}
+.ctx-item.danger:hover{background:rgba(224,92,92,.1);}
+.ctx-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.ctx-sep{height:1px;background:var(--border);margin:4px 0;}
+
+/* ── EDITOR ── */
+.editor-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:30px;}
+.empty-icon{font-size:28px;opacity:.35;font-family:var(--font-serif);font-style:italic;}
+.empty-title{font-family:var(--font-serif);font-style:italic;font-size:16px;color:var(--muted);}
+.empty-hint{font-size:11px;text-align:center;line-height:1.7;color:var(--muted);}
+.empty-hint strong{color:var(--accent);}
+.toolbar{display:flex;align-items:center;gap:3px;padding:5px 11px;
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.tool-btn{background:none;border:1px solid transparent;color:var(--muted);
+  padding:3px 6px;border-radius:4px;cursor:pointer;font-size:11px;
+  font-family:var(--font-mono);transition:all .1s;line-height:1.4;}
+.tool-btn:hover{border-color:var(--border);color:var(--text);background:var(--surface2);}
+.t-sep{width:1px;height:13px;background:var(--border);margin:0 2px;flex-shrink:0;}
+.char-count{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--muted);}
+.note-textarea{flex:1;background:var(--bg);color:var(--text);border:none;outline:none;
+  resize:none;padding:14px 16px;font-family:var(--font-mono);font-size:var(--ta-font);
+  line-height:1.75;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.note-textarea::placeholder{color:var(--muted);font-style:italic;}
+.note-textarea::-webkit-scrollbar{width:4px;}
+.note-textarea::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── FOOTER ── */
+.footer{display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-top:1px solid var(--border);
+  background:var(--surface);gap:8px;flex-shrink:0;}
+.save-status{display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-mono);color:var(--muted);}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.status-dot.local  {background:var(--muted);}
+.status-dot.saving {background:var(--accent);animation:blink .6s infinite;}
+.status-dot.synced {background:var(--success);}
+.status-dot.error  {background:var(--danger);}
+.footer-btns{display:flex;gap:5px;}
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:4px 10px;border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:11px;cursor:pointer;transition:all .15s;}
+.btn-sm:hover{border-color:var(--text);color:var(--text);}
+.btn-sm.primary{background:var(--accent);border-color:var(--accent);color:#0f0f0f;font-weight:600;}
+[data-theme="light"] .btn-sm.primary{color:#1a1714;}
+.btn-sm.primary:hover{background:var(--accent2);border-color:var(--accent2);}
+.btn-sm:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ── FREE / GRACE BANNERS ── */
+.free-banner{display:none;background:rgba(212,168,67,.08);border-bottom:1px solid rgba(212,168,67,.22);
+  padding:5px 13px;flex-shrink:0;font-size:11px;font-family:var(--font-mono);
+  color:var(--accent);align-items:center;gap:6px;}
+.free-banner.show{display:flex;}
+.grace-banner{display:none;background:rgba(232,160,64,.1);border-bottom:1px solid rgba(232,160,64,.25);
+  padding:5px 13px;flex-shrink:0;font-size:11px;font-family:var(--font-mono);
+  color:var(--warn);align-items:center;gap:6px;}
+.grace-banner.show{display:flex;}
+
+/* ── LICENSE GATE ── */
+.license-gate{display:none;flex-direction:column;align-items:center;
+  justify-content:center;flex:1;padding:28px 24px;gap:0;}
+.license-gate.show{display:flex;}
+.gate-logo{font-family:var(--font-serif);font-size:26px;color:var(--accent);
+  font-style:italic;margin-bottom:4px;}
+.gate-logo span{color:var(--text);font-style:normal;}
+.gate-sub{font-size:12px;color:var(--muted);margin-bottom:22px;text-align:center;line-height:1.6;}
+.gate-tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:18px;width:100%;}
+.gate-tab{flex:1;padding:8px;font-size:12px;font-family:var(--font-mono);
+  background:var(--surface2);color:var(--muted);border:none;cursor:pointer;transition:all .15s;}
+.gate-tab.active{background:var(--accent);color:#0f0f0f;font-weight:600;}
+[data-theme="light"] .gate-tab.active{color:#1a1714;}
+.gate-panel{width:100%;display:none;}
+.gate-panel.show{display:block;}
+.gate-field-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;display:block;}
+.gate-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+  padding:9px 11px;border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:14px;outline:none;transition:border-color .15s;
+  letter-spacing:2px;text-align:center;text-transform:uppercase;}
+.gate-input:focus{border-color:var(--accent);}
+.gate-input.err{border-color:var(--danger);}
+.gate-input.ok{border-color:var(--success);}
+.gate-err{font-size:11px;color:var(--danger);font-family:var(--font-mono);
+  margin-top:5px;min-height:16px;line-height:1.4;}
+.gate-btn{width:100%;margin-top:14px;background:var(--accent);color:#0f0f0f;
+  border:none;padding:10px;border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+[data-theme="light"] .gate-btn{color:#1a1714;}
+.gate-btn:hover:not(:disabled){background:var(--accent2);}
+.gate-btn:disabled{opacity:.45;cursor:not-allowed;}
+.gate-secondary{width:100%;margin-top:10px;background:transparent;color:var(--text2);
+  border:1px solid var(--border);padding:9px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:all .15s;}
+.gate-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.buy-desc{font-size:12px;color:var(--text2);font-family:var(--font-mono);
+  line-height:1.7;margin-bottom:18px;text-align:center;}
+.buy-features{list-style:none;padding:0;margin:0 0 18px;text-align:left;}
+.buy-features li{font-size:11px;color:var(--text2);font-family:var(--font-mono);
+  padding:4px 0 4px 16px;position:relative;}
+.buy-features li::before{content:'✓';color:var(--success);position:absolute;left:0;}
+.btn-buy{width:100%;background:var(--accent);color:#0f0f0f;border:none;
+  padding:11px;border-radius:var(--radius);font-family:var(--font-mono);
+  font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+[data-theme="light"] .btn-buy{color:#1a1714;}
+.btn-buy:hover{background:var(--accent2);}
+.buy-note{font-size:10px;color:var(--muted);font-family:var(--font-mono);
+  margin-top:8px;text-align:center;}
+
+/* ── TOASTS ── */
+#undoToast{position:fixed;bottom:46px;left:50%;transform:translateX(-50%);
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:6px 10px 6px 14px;border-radius:20px;font-size:11px;font-family:var(--font-mono);
+  z-index:999;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .18s;
+  display:flex;align-items:center;gap:8px;}
+#undoToast.show{opacity:1;pointer-events:auto;}
+.undo-btn{background:var(--accent);color:#0f0f0f;border:none;padding:2px 10px;
+  border-radius:12px;font-family:var(--font-mono);font-size:11px;font-weight:600;cursor:pointer;}
+.undo-timer{font-size:9px;color:var(--muted);min-width:14px;text-align:right;}
+#toast{position:fixed;bottom:46px;left:50%;transform:translateX(-50%);
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:5px 14px;border-radius:20px;font-size:11px;font-family:var(--font-mono);
+  z-index:998;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .18s;}
+#toast.show{opacity:1;}
+
+.spin{display:inline-block;width:10px;height:10px;border:2px solid rgba(0,0,0,.2);
+  border-top-color:currentColor;border-radius:50%;animation:spin .55s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo"><em>Tab</em><span class="logo-plain">Notes</span></div>
+  <div class="header-right">
+    <div id="licBadge" class="lic-badge free" role="button" tabindex="0">
+      <span class="lic-dot"></span>
+      <span id="licBadgeText">Free</span>
+    </div>
+    <button class="hbtn" id="popoutBtn"   title="Open in side window" type="button">⧉</button>
+    <button class="hbtn" id="settingsBtn" title="Settings"            type="button">⚙</button>
+
+    <div class="settings-panel" id="settingsPanel">
+      <div class="s-title">Settings</div>
+
+      <div class="s-group">
+        <span class="s-label">Theme</span>
+        <div class="theme-row">
+          <button class="theme-btn"        id="themeLight" type="button">☀ Light</button>
+          <button class="theme-btn active" id="themeDark"  type="button">☾ Dark</button>
+        </div>
+      </div>
+
+      <div class="s-divider"></div>
+
+      <div class="s-group">
+        <span class="s-label">Window Size</span>
+        <div class="size-row">
+          <button class="size-btn"        id="sizeSmall"  type="button"><span>▪</span>Small</button>
+          <button class="size-btn active" id="sizeMedium" type="button"><span>◼</span>Medium</button>
+          <button class="size-btn"        id="sizeLarge"  type="button"><span>⬛</span>Large</button>
+        </div>
+      </div>
+
+      <div class="s-divider"></div>
+
+      <div class="s-group">
+        <div class="toggle-row">
+          <span class="s-label" style="margin-bottom:0">Auto-save to cloud</span>
+          <label class="toggle">
+            <input type="checkbox" id="autoSaveToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="sLicSection" style="display:none">
+        <div class="s-divider"></div>
+        <div class="s-group">
+          <span class="s-label">License</span>
+          <div class="s-lic-name" id="sLicName"></div>
+          <div class="s-lic-key"  id="sLicKey"></div>
+          <button class="s-lic-activate" id="sLicActivate" type="button">Activate license</button>
+          <button class="s-lic-remove" id="sLicRemove" type="button">Remove license</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LICENSE GATE -->
+<div class="license-gate" id="licenseGate">
+  <div class="gate-logo"><em>Tab</em><span>Notes</span></div>
+  <div class="gate-sub">Use 3 local pages free.<br>Activate your license for unlimited pages and cloud sync.</div>
+  <div class="gate-tabs">
+    <button class="gate-tab active" id="tabActivate" type="button">I have a license</button>
+    <button class="gate-tab"        id="tabBuy"      type="button">Get a license</button>
+  </div>
+
+  <!-- Activate -->
+  <div class="gate-panel show" id="panelActivate">
+    <label class="gate-field-label" for="licKeyInput">License Key</label>
+    <input class="gate-input" type="text" id="licKeyInput"
+      placeholder="XXXX-XXXX-XXXX-XXXX"
+      maxlength="19" autocomplete="off" spellcheck="false">
+    <div class="gate-err" id="licKeyErr"></div>
+    <button class="gate-btn" id="activateBtn" type="button">Activate</button>
+  </div>
+
+  <!-- Buy -->
+  <div class="gate-panel" id="panelBuy">
+    <p class="buy-desc">Purchase on CoderNexus — get a license key by email instantly.</p>
+    <ul class="buy-features">
+      <li>Unlimited tabbed notes</li>
+      <li>Cloud sync — notes safe forever</li>
+      <li>Works across all your devices</li>
+      <li>Light &amp; dark mode, 3 window sizes</li>
+      <li>Export notes as .txt</li>
+    </ul>
+    <button class="btn-buy" id="buyBtn" type="button">Buy on CoderNexus ↗</button>
+    <div class="buy-note">You'll receive a license key by email after purchase.</div>
+  </div>
+  <button class="gate-secondary" id="continueFreeBtn" type="button">Continue free</button>
+</div>
+
+<!-- FREE BANNER -->
+<div class="free-banner" id="freeBanner">
+  <span>Free plan</span>
+  <span><strong id="freePageCount">0</strong>/3 local pages. Activate for unlimited pages and cloud sync.</span>
+</div>
+
+<!-- GRACE BANNER -->
+<div class="grace-banner" id="graceBanner">
+  <span>⚠</span>
+  <span>Offline mode — could not verify license. Access expires in <strong id="graceDaysLeft"></strong> day(s).</span>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar" id="tabBar" style="display:none">
+  <button class="btn-add-tab" id="addTabBtn" title="New tab" type="button">+</button>
+</div>
+
+<!-- HIDDEN TRAY -->
+<div class="hidden-tray" id="hiddenTray" style="display:none">
+  <span class="tray-label">Hidden:</span>
+</div>
+
+<!-- EDITOR -->
+<div class="editor-wrap" id="editorWrap" style="display:none">
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">✦ Notes</div>
+    <div class="empty-title">Nothing here yet</div>
+    <div class="empty-hint">Press <strong>+</strong> to create a tab.<br>
+      Hover a tab → <strong>↙ hide</strong> or <strong>🗑 delete</strong>.<br>
+      Right-click for more options.</div>
+  </div>
+  <div class="toolbar" id="toolbar" style="display:none">
+    <button class="tool-btn" data-fmt="bold"     ><b>B</b></button>
+    <button class="tool-btn" data-fmt="italic"   ><em>I</em></button>
+    <button class="tool-btn" data-fmt="underline"><u>U</u></button>
+    <div class="t-sep"></div>
+    <button class="tool-btn" data-fmt="h1">H1</button>
+    <button class="tool-btn" data-fmt="h2">H2</button>
+    <div class="t-sep"></div>
+    <button class="tool-btn" data-fmt="ul">• List</button>
+    <button class="tool-btn" data-fmt="code">{ }</button>
+    <div class="t-sep"></div>
+    <button class="tool-btn" data-fmt="hr">—</button>
+    <span class="char-count" id="charCount">0 chars</span>
+  </div>
+  <textarea class="note-textarea" id="noteTextarea" style="display:none"
+    placeholder="Start writing…" spellcheck="true"></textarea>
+</div>
+
+<!-- FOOTER -->
+<div class="footer" id="footer" style="display:none">
+  <div class="save-status">
+    <div class="status-dot local" id="statusDot"></div>
+    <span id="statusText">Saved locally</span>
+  </div>
+  <div class="footer-btns">
+    <button class="btn-sm" id="exportBtn"    type="button">Export</button>
+    <button class="btn-sm primary" id="syncBtn" type="button">Save to Cloud</button>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctxMenu" role="menu">
+  <div class="ctx-item" id="ctxRename"><span class="ctx-icon">✏</span>Rename</div>
+  <div class="ctx-item" id="ctxHide"  ><span class="ctx-icon">↙</span>Hide tab</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctxDelete"><span class="ctx-icon">🗑</span>Delete note</div>
+</div>
+
+<!-- UNDO TOAST -->
+<div id="undoToast" role="alert" aria-live="assertive">
+  <span id="undoMsg">Note deleted</span>
+  <button class="undo-btn" id="undoBtn" type="button">Undo</button>
+  <span class="undo-timer" id="undoTimer">5</span>
+</div>
+
+<!-- TOAST -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="popup.js"></script>
+</body>
+</html>
