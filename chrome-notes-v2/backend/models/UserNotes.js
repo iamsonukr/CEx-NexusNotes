@@ -29,9 +29,8 @@ const userNotesSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: false });
 
-userNotesSchema.pre('save', function (next) {
+userNotesSchema.pre('save', function () {
   this.updatedAt = new Date();
-  next();
 });
 
 module.exports = mongoose.model('UserNotes', userNotesSchema);
