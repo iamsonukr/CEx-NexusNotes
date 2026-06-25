@@ -2,7 +2,7 @@
 const UserNotes  = require('../models/UserNotes');
 
 const NEXUS_VERIFY  = 'https://nexusbackend-ookk.onrender.com/api/subscriptions/verify';
-const PRODUCT_ID    = '6a19a6a0d0ee1110ebcbc131';
+const PRODUCT_ID    = '6a3c050b99374b9a8d0f5012';
 const CACHE_MS      = 24 * 60 * 60 * 1000; // re-verify once per 24 hours
 
 /**

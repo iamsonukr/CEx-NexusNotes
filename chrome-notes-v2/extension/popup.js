@@ -1,5 +1,5 @@
 /**
- * TabNotes — popup.js
+ * NexusNotes — popup.js
  *
  * Flow:
  *  1. Open → read chrome.storage.sync for license metadata and chrome.storage.local for notes
@@ -27,7 +27,7 @@
 // ═══════════════════════════════════════════════════════════════════
 const NEXUS_VERIFY = 'https://nexusbackend-ookk.onrender.com/api/subscriptions/verify';
 const PRODUCT_ID   = '6a3c050b99374b9a8d0f5012';
-const BUY_URL      = 'https://codersnexus.com/nexus-store/non-incididunt-excep#licensing';
+const BUY_URL      = 'https://codersnexus.com/nexus-store/nexus-notes#licensing';
 const API_BASE     = 'https://cex-nexusnotes.onrender.com/api'; // replace with your deployed backend
 const GRACE_MS     = 3 * 24 * 60 * 60 * 1000;
 const DEBOUNCE_MS  = 3000; // 3s after last keystroke
@@ -381,7 +381,7 @@ async function doActivate() {
       await loadNotesFromCloud();
       setTimeout(() => {
         showApp();
-        toast(`Welcome, ${data.user?.firstName || 'there'}! TabNotes activated.`);
+        toast(`Welcome, ${data.user?.firstName || 'there'}! NexusNotes activated.`);
       }, 400);
 
     } else {

@@ -118,7 +118,7 @@ async function start() {
   try {
     await connectMongo();
     app.listen(PORT, () => {
-      console.log(`✓ TabNotes API on :${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      console.log(`✓ NexusNotes API on :${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });
   } catch (err) {
     console.error('✗ Startup:', err.message);
