@@ -28,7 +28,7 @@
 const NEXUS_VERIFY = 'https://nexusbackend-ookk.onrender.com/api/subscriptions/verify';
 const PRODUCT_ID   = '6a3c050b99374b9a8d0f5012';
 const BUY_URL      = 'https://codersnexus.com/nexus-store/non-incididunt-excep#licensing';
-const API_BASE     = 'https://your-tabnotes-api.com/api'; // replace with your deployed backend
+const API_BASE     = 'https://cex-nexusnotes.onrender.com/api'; // replace with your deployed backend
 const GRACE_MS     = 3 * 24 * 60 * 60 * 1000;
 const DEBOUNCE_MS  = 3000; // 3s after last keystroke
 const FREE_TAB_LIMIT = 3;
